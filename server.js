@@ -1,4 +1,5 @@
 import express from 'express'
+import bcrypt from 'bcrypt'
 
 const app = express()
 
@@ -19,6 +20,13 @@ const db = {
       password: 'bananas',
       entries: 0,
       joined: new Date()
+    },
+  ],
+  login: [
+    {
+      id: 234,
+      hash: '',
+      email: 'john@gmail.com'
     }
   ]
 }
@@ -31,26 +39,47 @@ app.get('/', (req, res) => {
 })
 
 app.post('/signin', (req, res) => {
-  if (req.body.email === db.users[0].email && req.body.password === db.users[0].password) {
-    return res.json('Successs')
+  const { email, password } = req.body
+
+  if (email === db.users[2].email) {
+    bcrypt.compare(password, db.users[2].password, function(err, result) {
+      if (!err && result) {
+        return res.json(db.users[2])
+      } else {
+        return res.status(400).json('Failed logging in with password')
+      }
+    })
   } else {
-    return res.status(400).json('Error loggin in.')
+    return res.status(400).json('Failed getting email.')
   }
-  
 })
 
 app.post('/register', (req, res) => {
   const { email, name, password } = req.body
-  db.users.push({
-      id: '125',
-      name: name,
-      email: email,
-      password: password,
-      entries: 0,
-      joined: new Date()
+  const saltRounds = 10
+
+  bcrypt.genSalt(saltRounds, function(err, salt) {
+    if (!err) {
+      bcrypt.hash(password, salt, function(err, hash) {
+        if (!err) {
+          db.users.push({
+              id: '125',
+              name: name,
+              email: email,
+              password: hash,
+              entries: 0,
+              joined: new Date()
+          })
+          
+          return res.json(db.users[db.users.length - 1])
+        } else {
+          return res.status(500).json({error: "Failed to process Password."})
+        }
+      })
+    } else {
+      return res.status(500).json({error: "Failed to process Password."})
+    }
   })
-  
-  return res.json(db.users[db.users.length - 1])
 })
 
 app.get('/profile/:id', (req, res) => {
