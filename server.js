@@ -1,5 +1,6 @@
 import express from 'express'
 import bcrypt from 'bcrypt'
+import cors from 'cors'
 
 const app = express()
 
@@ -33,6 +34,7 @@ const db = {
 
 app.use(express.urlencoded({extended: false}))
 app.use(express.json())
+app.use(cors())
 
 app.get('/', (req, res) => {
   return res.send(db.users)
